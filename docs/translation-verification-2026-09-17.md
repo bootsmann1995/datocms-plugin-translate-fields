@@ -78,6 +78,20 @@ npm run build
 netlify deploy --site feddc108-845c-478d-9355-b6befd81f4e7 --dir build --no-build --prod
 ```
 
-The original public Translate plugin remains installed; the private fork's
-single-locale buttons are identified with `[FORK]`. Replacing all original
-manual field assignments is a separate migration.
+## Active replacement
+
+At the user's request, the original `Translate` installation
+(`VrHQ74rGRheJk0DdVUEOyw`) was switched to the hosted fork using DatoCMS's
+`Point to local server` action with the Netlify HTTPS URL. It is now a private
+plugin, retaining its original field assignments and provider settings.
+
+The separate `Aller Aqua Translate` test installation (`NkZTGOMOSvCVo9hFb1ZwaQ`)
+was disabled to eliminate duplicate buttons. Its settings are retained.
+
+Verified on the article: the headline, nested hero headline/teaser, block area,
+contact block, slug and SEO each load a single plugin iframe from Netlify.
+No record content was changed during this configuration switch.
+
+Rollback: use `Switch to Marketplace version` on the active `Translate`
+installation to restore `datocms-plugin-translate-fields` version `1.15.2`.
+Marketplace updates no longer apply automatically while it is private.
