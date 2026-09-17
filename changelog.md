@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and follows [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Fixed
+- Structured text spans were silently skipped when their contents looked like data. `Date.parse()` accepted prose such as `Stand 172`, `Number()` accepted anything it could coerce, and `JSON.parse()` accepted a quoted sentence; all three are now strict checks
+- Markdown detection used shared global regexes without resetting `lastIndex`, so classification depended on which values were checked before it and varied between runs
+- `getStructuredTextTranslation` required `PathType.text`, so a span containing a soft line break was classified as markdown and dropped, since that loop has no markdown branch. Every span is now translated, still honouring `excludedKeys`
+
 ## [1.15.2] - 2026-06-22
 ### Fixed
 - DeepL XML mode: escape special characters (`&`, `<`, `>`) before sending to avoid 400 parsing errors when text contains an ampersand
