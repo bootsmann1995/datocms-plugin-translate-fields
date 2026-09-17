@@ -145,3 +145,50 @@ describe('getValueType', () => {
     expect(getValueType('text', 'text', PathType.text)).toBe(PathType.text)
   })
 })
+
+// Anything classified as data is skipped during translation without a warning,
+// so a loose guess here shows up as prose that stays in the source language.
+// Every string below is real editorial copy that used to be misclassified.
+describe('getValueType does not mistake prose for data', () => {
+  it.each([
+    [
+      'Come visit us: Pavilion of Denmark - Kupola Hall, Stand 172.',
+      'trailing number parsed as a year',
+    ],
+    ['Aquaculture Europe 2026', 'year in a title'],
+    ['Am Bahnhof 3-4', 'street number parsed as a date'],
+    [
+      'The R&D team has been busy verifying data from the initial trials',
+      'prose with an ampersand',
+    ],
+    ['2 kg of feed per fish', 'leading number'],
+    ['Feed sizes range from 3 to 12 mm', 'numbers mid-sentence'],
+  ])('keeps %j translatable (%s)', (value) => {
+    expect(getValueType('text', value, PathType.text)).toBe(PathType.text)
+  })
+
+  it('does not treat a quoted sentence as json', () => {
+    expect(
+      getValueType('text', '"Aquaculture in Global Change"', PathType.text),
+    ).toBe(PathType.text)
+  })
+
+  it('does not treat a bare number-like string with text as a number', () => {
+    expect(getValueType('text', '2 ', PathType.text)).toBe(PathType.text)
+  })
+
+  it('still detects a real iso date', () => {
+    expect(getValueType('date', '2026-09-28T10:00:00Z', PathType.text)).toBe(
+      PathType.date,
+    )
+  })
+
+  it('still detects a real number string', () => {
+    expect(getValueType('number', '42', PathType.text)).toBe(PathType.number)
+    expect(getValueType('number', '-3.5', PathType.text)).toBe(PathType.number)
+  })
+
+  it('still detects a real json object', () => {
+    expect(getValueType('json', '{"a":1}', PathType.text)).toBe(PathType.json)
+  })
+})

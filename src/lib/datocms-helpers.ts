@@ -1,5 +1,4 @@
 import { PathType } from './types'
-import { isJsonString } from './helpers'
 import { markdownRegexesArray, htmlRegex } from './regexes'
 
 export const pathTypeIsObject = [
@@ -88,6 +87,59 @@ export function isColor(value: any): boolean {
   )
 }
 
+// IMPORTANT: the three predicates below decide whether a value is data rather
+// than prose, and anything they claim is skipped during translation without a
+// warning. They used to be written as the loosest possible coercion check,
+// which made them swallow ordinary sentences. Keep them strict.
+
+// A number field holds an actual number. A string counts only when it is
+// nothing but a number: `Number(value)` accepted anything it could coerce,
+// so a span reading "2 " was classified as a number and left untranslated.
+export function isNumberValue(value: any): boolean {
+  if (typeof value === 'number') {
+    return Number.isFinite(value)
+  }
+  if (typeof value !== 'string') {
+    return false
+  }
+  // Deliberately not trimmed: surrounding whitespace means the value came from
+  // prose, such as the "2 " that precedes a bold unit in a sentence.
+  return /^[+-]?(\d+\.?\d*|\.\d+)$/.test(value)
+}
+
+// `Date.parse()` accepts far more than dates: its legacy fallback parser picks
+// numbers out of arbitrary prose, so "Stand 172" parsed as the year 172 and
+// "Am Bahnhof 3-4" as a date. Both were then treated as dates and dropped.
+// DatoCMS stores date and date-time fields as ISO-8601, so require that shape.
+const isoDateRegex =
+  /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/
+
+export function isDateValue(value: any): boolean {
+  if (value instanceof Date) {
+    return true
+  }
+  if (typeof value !== 'string') {
+    return false
+  }
+  const trimmed = value.trim()
+  return isoDateRegex.test(trimmed) && !isNaN(Date.parse(trimmed))
+}
+
+// A JSON field holds an object or an array. Bare `JSON.parse()` also succeeds
+// on quoted strings and numbers, so a quoted sentence such as
+// "Aquaculture in Global Change" counted as JSON and was never translated.
+export function isJsonObjectString(value: any): boolean {
+  if (typeof value !== 'string') {
+    return false
+  }
+  try {
+    const parsed = JSON.parse(value)
+    return typeof parsed === 'object' && parsed !== null
+  } catch (e) {
+    return false
+  }
+}
+
 export function isSeo(value: any): boolean {
   return (
     Boolean(value) &&
@@ -137,22 +189,29 @@ export function getValueType(
     return PathType.boolean
   }
 
-  if (pathTypeIsObject.indexOf(currentType) === -1 && Number(value)) {
+  if (pathTypeIsObject.indexOf(currentType) === -1 && isNumberValue(value)) {
     return PathType.number
   }
 
-  if (
-    pathTypeIsObject.indexOf(currentType) === -1 &&
-    !isNaN(Date.parse(value))
-  ) {
+  if (pathTypeIsObject.indexOf(currentType) === -1 && isDateValue(value)) {
     return PathType.date
   }
 
-  if (isJsonString(value)) {
+  if (isJsonObjectString(value)) {
     return PathType.json
   }
 
-  if (markdownRegexesArray.some((regex) => regex.test(value))) {
+  // IMPORTANT: these regexes carry the global flag and are shared module-level
+  // objects, so RegExp.test() resumes from the lastIndex left behind by the
+  // previous value it was called with. Without resetting, whether a value is
+  // seen as markdown depends on which values happened to be classified before
+  // it, which made misclassification come and go between runs. Reset first.
+  if (
+    markdownRegexesArray.some((regex) => {
+      regex.lastIndex = 0
+      return regex.test(value)
+    })
+  ) {
     return PathType.markdown
   }
 

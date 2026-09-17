@@ -157,7 +157,18 @@ export async function getStructuredTextTranslation(
   let translatedArray = mappedValue
 
   for (const path of allPaths) {
-    if (path.type === PathType.text && path.key === 'text') {
+    // IMPORTANT: inside a structured text document a `text` key is always a
+    // span's prose, whatever getValueType() guessed from its contents, and
+    // formatting lives in `marks` rather than in the string. Requiring
+    // PathType.text here meant a span holding a soft line break was classified
+    // as markdown and then dropped, because this loop has no markdown branch.
+    // Nested blocks never reach this check: they are returned as a single
+    // structured_text_block path and handled below.
+    if (
+      path.key === 'text' &&
+      path.type !== PathType.exclude &&
+      typeof path.value === 'string'
+    ) {
       const currentPath = path.path
       const currentString = get(translatedArray, currentPath)
       if (currentString) {
