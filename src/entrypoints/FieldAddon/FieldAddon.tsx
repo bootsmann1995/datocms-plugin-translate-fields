@@ -315,8 +315,8 @@ export default function FieldAddon({ ctx }: Props) {
             disabled={isTranslating}
           >
             {hasFieldValue
-              ? 'Replace and translate from '
-              : 'Copy and translate from '}
+              ? '[FORK] Replace and translate from '
+              : '[FORK] Copy and translate from '}
             {getFullLocaleText(locales[0])}
           </Button>
         </Form>

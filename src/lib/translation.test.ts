@@ -1,5 +1,6 @@
 import { getStructuredTextTranslation, getTranslation } from './translation'
 import { TranslationFormat, TranslationService } from './types'
+import { shrimpTeaser } from '../mocks/shrimp-regression'
 
 const tranlationOptions = {
   fromLocale: 'nl',
@@ -92,6 +93,22 @@ describe('getTranslation', () => {
 })
 
 describe('getStructuredTextTranslation translates every span', () => {
+  it('translates the complete Shrimp teaser including the final multiline leaf', async () => {
+    const result = await getStructuredTextTranslation(
+      shrimpTeaser,
+      tranlationOptions,
+    )
+    expect(result).toEqual(
+      shrimpTeaser.map((paragraph) => ({
+        ...paragraph,
+        children: paragraph.children.map((leaf) => ({
+          ...leaf,
+          text: `Translated ${leaf.text}`,
+        })),
+      })),
+    )
+  })
+
   // A span is prose no matter what it contains. These shapes all used to be
   // classified as something other than text and were then dropped in silence,
   // which surfaced as a paragraph left in the source language.
