@@ -9,6 +9,10 @@ import {
 } from './types'
 
 export const defaultShowTranslate = true
+// Off by default: on a non-default locale the button replaces the whole field,
+// so an already translated and proofread value would be overwritten by a single
+// click. Editors who do want to retranslate can opt in per project or per field.
+export const defaultAllowRetranslate = false
 export const defaultDeeplPreserveFormatting = false
 
 export const fieldsOptions: SettingOption<DatoFieldType>[] = [

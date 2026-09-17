@@ -10,6 +10,7 @@ import {
 import {
   deeplFormalityLevelOptions,
   defaultShowTranslate,
+  defaultAllowRetranslate,
   defaultDeeplPreserveFormatting,
   translationServiceOptions,
   supertextPolitenessOptions,
@@ -40,6 +41,11 @@ export default function ConfigScreen({ ctx }: Props) {
     pluginParameters?.showTranslateAll ??
     pluginGlobalParameters?.showTranslateAll ??
     defaultShowTranslate
+
+  const selectedAllowRetranslate =
+    pluginParameters?.allowRetranslate ??
+    pluginGlobalParameters?.allowRetranslate ??
+    defaultAllowRetranslate
 
   const selectedTranslationService =
     pluginParameters?.translationService ||
@@ -86,6 +92,21 @@ export default function ConfigScreen({ ctx }: Props) {
               ctx.setParameters({
                 ...pluginParameters,
                 showTranslateAll: newValue,
+              })
+              ctx.notice('Settings updated successfully!')
+            }}
+          />
+
+          <SwitchField
+            name="allowRetranslate"
+            id="allowRetranslate"
+            label="Allow retranslating fields that already have content"
+            hint="By default the translate button is hidden on a non-primary locale once the field has a value, so an existing translation cannot be overwritten by a single click. Enable this to show the button anyway."
+            value={selectedAllowRetranslate}
+            onChange={(newValue) => {
+              ctx.setParameters({
+                ...pluginParameters,
+                allowRetranslate: newValue,
               })
               ctx.notice('Settings updated successfully!')
             }}

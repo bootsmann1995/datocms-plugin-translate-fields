@@ -29,6 +29,7 @@ import {
 import {
   deeplFormalityLevelOptions,
   defaultShowTranslate,
+  defaultAllowRetranslate,
   defaultDeeplPreserveFormatting,
   translationFormats,
   translationServiceOptions,
@@ -53,6 +54,11 @@ export default function FieldAddon({ ctx }: Props) {
     pluginParameters?.showTranslateAll ??
     pluginGlobalParameters?.showTranslateAll ??
     defaultShowTranslate
+
+  const allowRetranslate =
+    pluginParameters?.allowRetranslate ??
+    pluginGlobalParameters?.allowRetranslate ??
+    defaultAllowRetranslate
 
   const translationService =
     pluginParameters?.translationService ||
@@ -271,13 +277,14 @@ export default function FieldAddon({ ctx }: Props) {
     )
   }
 
+  const hasFieldValue = fieldHasFieldValue(fieldValue, {
+    itemTypes: ctx.itemTypes,
+    fields: ctx.fields,
+    editor: editor,
+  })
+
   if (
-    (fieldHasFieldValue(fieldValue, {
-      itemTypes: ctx.itemTypes,
-      fields: ctx.fields,
-      editor: editor,
-    }) &&
-      !isDefaultLocale) ||
+    (hasFieldValue && !isDefaultLocale && !allowRetranslate) ||
     locales.length <= 1
   ) {
     ctx.setHeight(0)
@@ -307,7 +314,10 @@ export default function FieldAddon({ ctx }: Props) {
             }
             disabled={isTranslating}
           >
-            Copy and translate from {getFullLocaleText(locales[0])}
+            {hasFieldValue
+              ? 'Replace and translate from '
+              : 'Copy and translate from '}
+            {getFullLocaleText(locales[0])}
           </Button>
         </Form>
       </Canvas>

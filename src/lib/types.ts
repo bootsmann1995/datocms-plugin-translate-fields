@@ -74,6 +74,7 @@ export enum SupertextPolitness {
 
 export type Parameters = {
   showTranslateAll?: boolean
+  allowRetranslate?: boolean
   translationService?: SettingOption<TranslationService>
   model?: SettingOption<string>
   temperature?: number
