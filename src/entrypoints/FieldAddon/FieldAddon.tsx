@@ -15,6 +15,7 @@ import {
 import {
   getSupportedToLocale,
   getSupportedFromLocale,
+  isSupportedToLocale,
 } from '../../lib/supported-locales'
 import {
   Editor,
@@ -151,7 +152,27 @@ export default function FieldAddon({ ctx }: Props) {
         editor: editor,
       })
     ) {
-      for (const locale of languages) {
+      // Skip locales the provider cannot translate into. Sending one anyway
+      // makes the provider reject the request, and since the loop below stops
+      // on the first failure, a single unsupported locale would discard every
+      // other translation in the run.
+      const unsupported = languages.filter(
+        (locale) => !isSupportedToLocale(locale, translationServiceValue),
+      )
+      const supported = languages.filter((locale) =>
+        isSupportedToLocale(locale, translationServiceValue),
+      )
+
+      if (!supported.length) {
+        setHasError(
+          `${translationService.label} cannot translate into ${unsupported
+            .map(getFullLocaleText)
+            .join(', ')}`,
+        )
+        return
+      }
+
+      for (const locale of supported) {
         let translatedField
         const options: TranslationOptions = {
           fromLocale: getSupportedFromLocale(
@@ -246,6 +267,14 @@ export default function FieldAddon({ ctx }: Props) {
         } finally {
           setIsTranslating(false)
         }
+      }
+
+      if (unsupported.length) {
+        ctx.notice(
+          `Skipped ${unsupported
+            .map(getFullLocaleText)
+            .join(', ')}: not supported by ${translationService.label}`,
+        )
       }
     } else {
       setHasError(

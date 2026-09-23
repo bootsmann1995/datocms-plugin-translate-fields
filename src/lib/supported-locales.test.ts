@@ -1,8 +1,29 @@
 import {
   getSupportedFromLocale,
   getSupportedToLocale,
+  isSupportedToLocale,
 } from './supported-locales'
 import { TranslationService } from './types'
+
+// DeepL answers HTTP 400 for a target language it does not know, and the caller
+// stops the whole run on the first failure. A project locale such as bem-ZM
+// therefore discarded the translations for every other locale in the run.
+describe('isSupportedToLocale', () => {
+  it('rejects a locale DeepL cannot translate into', () => {
+    expect(isSupportedToLocale('bem-ZM', TranslationService.deepl)).toBe(false)
+  })
+
+  it.each(['en', 'da', 'sr', 'ar', 'vi', 'el-GR', 'ro-RO', 'zh', 'nb'])(
+    'accepts %s',
+    (locale) => {
+      expect(isSupportedToLocale(locale, TranslationService.deepl)).toBe(true)
+    },
+  )
+
+  it('does not judge locales for providers with their own fallbacks', () => {
+    expect(isSupportedToLocale('bem-ZM', TranslationService.openAI)).toBe(true)
+  })
+})
 
 describe('getSupportedFromLocale', () => {
   describe('deepl', () => {
@@ -20,7 +41,9 @@ describe('getSupportedFromLocale', () => {
       )
     })
     it('should return empty string if locale does not exist', () => {
-      expect(getSupportedFromLocale('yi', TranslationService.deepl)).toBe('')
+      expect(getSupportedFromLocale('bem-ZM', TranslationService.deepl)).toBe(
+        '',
+      )
     })
   })
 
@@ -41,9 +64,9 @@ describe('getSupportedFromLocale', () => {
       ).toBe('PT')
     })
     it('should return empty string if locale does not exist', () => {
-      expect(getSupportedFromLocale('yi', TranslationService.deeplFree)).toBe(
-        '',
-      )
+      expect(
+        getSupportedFromLocale('bem-ZM', TranslationService.deeplFree),
+      ).toBe('')
     })
   })
 

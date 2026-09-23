@@ -21,9 +21,13 @@ export function isLocalDevelopment(): boolean {
 export function getProxiedUrl(targetUrl: string): URL {
   // During local development the plugin is served from localhost, which the
   // DatoCMS proxy does allow, and no local function is running to replace it.
-  const base = isLocalDevelopment() ? DATOCMS_PROXY : SELF_HOSTED_PROXY
+  // The self-hosted path is relative, so it needs the current origin resolved
+  // against it; the DatoCMS one is absolute and must not touch window, which
+  // does not exist when these functions are exercised outside a browser.
+  const proxyUrl = isLocalDevelopment()
+    ? new URL(DATOCMS_PROXY)
+    : new URL(SELF_HOSTED_PROXY, window.location.origin)
 
-  const proxyUrl = new URL(base, window.location.origin)
   proxyUrl.searchParams.set('url', targetUrl)
 
   return proxyUrl
