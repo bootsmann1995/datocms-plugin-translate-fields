@@ -1,14 +1,11 @@
 import { SupertextPolitness, TranslationOptions } from '../types'
+import { getProxiedUrl } from '../cors-proxy'
 
 export default async function translate(
   string: string,
   options: TranslationOptions,
 ): Promise<string> {
-  const apiUrl = new URL('https://cors-proxy.datocms.com') // DatoCMS-provided CORS proxy
-  apiUrl.searchParams.set(
-    'url',
-    'https://api.supertext.com/v1/translate/ai/text',
-  ) // Actual Supertext API endpoint
+  const apiUrl = getProxiedUrl('https://api.supertext.com/v1/translate/ai/text')
 
   // Make the API request
   const request = await fetch(apiUrl, {

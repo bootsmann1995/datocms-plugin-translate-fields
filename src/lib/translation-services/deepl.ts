@@ -3,6 +3,7 @@ import {
   TranslationOptions,
   TranslationService,
 } from '../types'
+import { getProxiedUrl } from '../cors-proxy'
 
 function escapeXml(text: string): string {
   return text
@@ -61,8 +62,7 @@ export default async function translate(
       ? 'api-free'
       : 'api'
 
-  const apiUrl = new URL('https://cors-proxy.datocms.com') // DatoCMS-provided CORS proxy
-  apiUrl.searchParams.set('url', `https://${apiVersion}.deepl.com/v2/translate`) // Actual DeepL API endpoint
+  const apiUrl = getProxiedUrl(`https://${apiVersion}.deepl.com/v2/translate`)
 
   // Make the API request
   const request = await fetch(apiUrl, {
